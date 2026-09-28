@@ -1,0 +1,9 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/backend"
+    ]
+}

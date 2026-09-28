@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCart — Order Tracking & Delivery Status</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom Clean Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans text-base">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- MAIN NAVIGATION HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-xs">
+          🛒
+        </div>
+        <div>
+          <span class="text-2xl font-bold tracking-tight text-slate-900 block leading-tight">OmniCart</span>
+          <span class="text-xs text-slate-500 font-medium block">Online Marketplace</span>
+        </div>
+      </a>
+
+      <!-- Global Search -->
+      <div class="flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Search products, brands and categories..."
+            class="clean-input py-2 pl-9 text-xs global-search-input"
+          />
+          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Saved Products Link (Guarded) -->
+        <a
+          href="saved-products.html"
+          onclick="return AuthModule.guardUserClick('saved-products.html', event)"
+          class="flex items-center gap-1.5 p-2 rounded-lg text-slate-700 hover:bg-slate-100 text-xs font-semibold"
+        >
+          <span>❤️</span>
+          <span class="hidden sm:inline">Saved</span>
+          <span id="header-saved-badge" class="badge badge-blue text-[11px] saved-count-badge">0</span>
+        </a>
+
+        <!-- Cart Quick View Button (Guarded) -->
+        <a
+          href="cart.html"
+          onclick="return AuthModule.guardUserClick('cart.html', event)"
+          class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-2"
+        >
+          <span>🛒</span>
+          <span class="hidden sm:inline">Cart</span>
+          <span id="header-cart-badge" class="badge badge-blue text-[11px]">0</span>
+        </a>
+
+        <!-- Auth State: Guest (Sign In) vs Authenticated -->
+        <div id="header-guest-auth">
+          <a href="login.html?redirect=orders.html" class="btn-primary py-2 px-4 text-xs font-semibold shadow-xs">
+            Sign In
+          </a>
+        </div>
+
+        <div id="header-user-auth" class="hidden relative">
+          <button onclick="AuthModule.toggleAuthDropdown()" class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full border border-slate-200 bg-white hover:border-slate-300 transition-colors">
+            <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">👤</div>
+            <span id="header-user-name" class="text-xs font-bold text-slate-800 max-w-[120px] truncate">My Account</span>
+            <span class="text-[10px] text-slate-400">▼</span>
+          </button>
+          
+          <div id="auth-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 rounded-xl bg-white border border-slate-200 shadow-xl p-2 z-50 text-sm">
+            <div id="auth-dropdown-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Nav Bar -->
+    <div class="border-t border-slate-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-sm py-2 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-1.5">
+          <a href="index.html" class="nav-tab">Home</a>
+          <a href="products.html" class="nav-tab">All Products</a>
+          <a href="saved-products.html" onclick="return AuthModule.guardUserClick('saved-products.html', event)" class="nav-tab">Saved Products (Wishlist)</a>
+          <a href="cart.html" onclick="return AuthModule.guardUserClick('cart.html', event)" class="nav-tab">My Cart</a>
+          <a href="orders.html" class="nav-tab active">Track Orders</a>
+          <a href="customer-profile.html" onclick="return AuthModule.guardUserClick('customer-profile.html', event)" class="nav-tab">My Profile</a>
+        </div>
+        <a href="seller-dashboard.html" onclick="return AuthModule.guardSellerClick('seller-dashboard.html', event)" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3.5 py-1.5 rounded-lg transition-colors shrink-0">
+          Seller Portal ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN ORDERS CONTAINER -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+    
+    <div>
+      <h1 class="text-3xl font-extrabold text-slate-900">Order History & Delivery Tracking</h1>
+      <p class="text-sm text-slate-500 mt-1">Real-time status updates and order payments recorded in Rupees (₹).</p>
+    </div>
+
+    <!-- Orders List Container -->
+    <div id="orders-list-container">
+      <!-- Populated dynamically via OrdersModule -->
+    </div>
+
+  </main>
+
+  <!-- CLEAN FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-16 py-10 text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-slate-900 text-base">OmniCart Marketplace</span>
+        <span>•</span>
+        <span>Enterprise E-Commerce Frontend</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-slate-400">
+        <span>MySQL Schema Aligned</span>
+        <span>•</span>
+        <span>Rupees (₹) Base Currency</span>
+        <span>•</span>
+        <a href="seller-dashboard.html" class="text-emerald-700 hover:underline font-semibold">Seller Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="clean-card w-full max-w-md p-6 bg-white shadow-2xl relative">
+      <button onclick="AuthModule.closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 mb-5 text-xs">
+        <button id="modal-tab-buyer" onclick="AuthModule.setModalTab('buyer')" class="py-2.5 rounded-lg font-semibold transition-all bg-white text-blue-700 shadow-xs border border-slate-200">Customer Access</button>
+        <button id="modal-tab-seller" onclick="AuthModule.setModalTab('seller')" class="py-2.5 rounded-lg font-medium transition-all text-slate-600 hover:text-slate-900">Seller Portal</button>
+      </div>
+
+      <div id="auth-modal-form-container"></div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/data-store.js"></script>
+  <script src="js/ui-module.js"></script>
+  <script src="js/auth-module.js"></script>
+  <script src="js/visual-search-module.js"></script>
+  <script src="js/orders-module.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      OrdersModule.init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCart — Customer Profile & Saved Addresses</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom Clean Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans text-base">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- MAIN NAVIGATION HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-xs">
+          🛒
+        </div>
+        <div>
+          <span class="text-2xl font-bold tracking-tight text-slate-900 block leading-tight">OmniCart</span>
+          <span class="text-xs text-slate-500 font-medium block">Online Marketplace</span>
+        </div>
+      </a>
+
+      <!-- Global Search Input -->
+      <div class="flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Search products, brands and categories..."
+            class="clean-input py-2 pl-9 text-xs global-search-input"
+          />
+          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Saved Products Link (Guarded) -->
+        <a
+          href="saved-products.html"
+          onclick="return AuthModule.guardUserClick('saved-products.html', event)"
+          class="flex items-center gap-1.5 p-2 rounded-lg text-slate-700 hover:bg-slate-100 text-xs font-semibold"
+        >
+          <span>❤️</span>
+          <span class="hidden sm:inline">Saved</span>
+          <span id="header-saved-badge" class="badge badge-blue text-[11px] saved-count-badge">0</span>
+        </a>
+
+        <!-- Cart Quick View Button (Guarded) -->
+        <a
+          href="cart.html"
+          onclick="return AuthModule.guardUserClick('cart.html', event)"
+          class="btn-secondary py-2 px-3 text-xs font-semibold flex items-center gap-2"
+        >
+          <span>🛒</span>
+          <span class="hidden sm:inline">Cart</span>
+          <span id="header-cart-badge" class="badge badge-blue text-[11px]">0</span>
+        </a>
+
+        <!-- Auth State: Guest (Sign In) vs Authenticated -->
+        <div id="header-guest-auth">
+          <a href="login.html?redirect=customer-profile.html" class="btn-primary py-2 px-4 text-xs font-semibold shadow-xs">
+            Sign In
+          </a>
+        </div>
+
+        <div id="header-user-auth" class="hidden relative">
+          <button onclick="AuthModule.toggleAuthDropdown()" class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full border border-slate-200 bg-white hover:border-slate-300 transition-colors">
+            <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">👤</div>
+            <span id="header-user-name" class="text-xs font-bold text-slate-800 max-w-[120px] truncate">My Account</span>
+            <span class="text-[10px] text-slate-400">▼</span>
+          </button>
+          
+          <div id="auth-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 rounded-xl bg-white border border-slate-200 shadow-xl p-2 z-50 text-sm">
+            <div id="auth-dropdown-items"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Nav Bar -->
+    <div class="border-t border-slate-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-sm py-2 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-1.5">
+          <a href="index.html" class="nav-tab">Home</a>
+          <a href="products.html" class="nav-tab">All Products</a>
+          <a href="saved-products.html" onclick="return AuthModule.guardUserClick('saved-products.html', event)" class="nav-tab">Saved Products (Wishlist)</a>
+          <a href="cart.html" onclick="return AuthModule.guardUserClick('cart.html', event)" class="nav-tab">My Cart</a>
+          <a href="orders.html" onclick="return AuthModule.guardUserClick('orders.html', event)" class="nav-tab">Track Orders</a>
+          <a href="customer-profile.html" class="nav-tab active">My Profile</a>
+        </div>
+        <a href="seller-dashboard.html" onclick="return AuthModule.guardSellerClick('seller-dashboard.html', event)" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3.5 py-1.5 rounded-lg transition-colors shrink-0">
+          Seller Portal ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN PROFILE CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+    
+    <!-- 1. STRICT ACCESS GUARD: CUSTOMER LOGIN & REGISTER (Shown when not authenticated) -->
+    <div id="customer-auth-container" class="max-w-md mx-auto my-8 clean-card p-6 sm:p-8 bg-white shadow-xl">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 text-2xl flex items-center justify-center mx-auto mb-3 border border-blue-200 shadow-xs">
+          👤
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900">Customer Account Login</h2>
+        <p class="text-xs text-slate-500 mt-1">Sign in to access your profile, manage saved delivery addresses, and view your orders.</p>
+      </div>
+
+      <!-- Auth Tabs: Sign In vs Register -->
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 mb-5 text-xs">
+        <button
+          id="cust-tab-login"
+          onclick="ProfileModule.setAuthMode('login')"
+          class="py-2 rounded-lg font-semibold transition-all bg-white text-blue-700 shadow-xs border border-slate-200"
+        >
+          Sign In
+        </button>
+        <button
+          id="cust-tab-register"
+          onclick="ProfileModule.setAuthMode('register')"
+          class="py-2 rounded-lg font-medium transition-all text-slate-500 hover:text-slate-800"
+        >
+          Create Account
+        </button>
+      </div>
+
+      <!-- Form Box (Rendered dynamically via ProfileModule) -->
+      <div id="customer-auth-form-box"></div>
+    </div>
+
+    <!-- 2. PROTECTED USER PORTAL (Shown ONLY when logged in as Customer) -->
+    <div id="customer-profile-container" class="hidden space-y-8">
+
+      <!-- Top Profile Overview Bar -->
+      <div class="clean-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-blue-600">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-extrabold text-xl shadow-xs">
+            👤
+          </div>
+          <div>
+            <h1 id="profile-full-name" class="text-2xl font-bold text-slate-900">Customer Name</h1>
+            <div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+              <span>Customer ID: <strong id="profile-customer-id" class="text-slate-700">CUST-0000</strong></span>
+              <span>•</span>
+              <span class="badge badge-blue">Active Customer Account</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <a href="saved-products.html" class="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5">
+            <span>❤️</span>
+            <span>Saved Products</span>
+          </a>
+          <a href="orders.html" class="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5">
+            <span>📦</span>
+            <span>My Orders</span>
+          </a>
+          <button onclick="AuthModule.logout()" class="btn-secondary text-xs py-2 px-3 text-red-600 hover:bg-red-50 hover:border-red-200">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- 2 Columns Layout: Contact Information (5 cols) & Delivery Addresses (7 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+        <!-- LEFT: Phone Numbers & Emails (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Phone numbers (CustomerPhone table) -->
+          <div class="clean-card p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 class="font-bold text-slate-900 text-base">Registered Phone Numbers</h3>
+              <span class="text-xs text-slate-400">customer_phone</span>
+            </div>
+
+            <div class="space-y-2.5" id="profile-phones-container"></div>
+
+            <!-- Add phone input -->
+            <form onsubmit="ProfileModule.addPhone(event)" class="pt-3 border-t border-slate-100 flex gap-2">
+              <input type="text" id="new-phone-input" placeholder="+91 98765 00000" required class="clean-input text-xs py-2 flex-1" />
+              <input type="text" id="new-phone-type" placeholder="Type" class="clean-input text-xs py-2 w-28" />
+              <button type="submit" class="btn-primary py-2 px-3.5 text-xs font-semibold">+ Add</button>
+            </form>
+          </div>
+
+          <!-- Email addresses (CustomerEmail table) -->
+          <div class="clean-card p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 class="font-bold text-slate-900 text-base">Registered Email Addresses</h3>
+              <span class="text-xs text-slate-400">customer_email</span>
+            </div>
+
+            <div class="space-y-2.5" id="profile-emails-container"></div>
+
+            <!-- Add email input -->
+            <form onsubmit="ProfileModule.addEmail(event)" class="pt-3 border-t border-slate-100 flex gap-2">
+              <input type="email" id="new-email-input" placeholder="name@domain.com" required class="clean-input text-xs py-2 flex-1" />
+              <input type="text" id="new-email-type" placeholder="Type" class="clean-input text-xs py-2 w-28" />
+              <button type="submit" class="btn-primary py-2 px-3.5 text-xs font-semibold">+ Add</button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Delivery Addresses (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <div class="clean-card p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base">Saved Delivery Addresses</h3>
+                <p class="text-xs text-slate-500">MySQL: address & address_type relational tables</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="profile-addresses-container"></div>
+          </div>
+
+          <!-- Add New Address Form -->
+          <div class="clean-card p-6 space-y-4">
+            <h3 class="font-bold text-slate-900 text-base pb-3 border-b border-slate-100">+ Add New Shipping Address</h3>
+
+            <form onsubmit="ProfileModule.addAddress(event)" class="space-y-3.5 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">House / Flat / Building</label>
+                  <input type="text" id="new-addr-house" required placeholder="e.g. Flat 304, Emerald Bay" class="clean-input text-xs" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Street / Locality</label>
+                  <input type="text" id="new-addr-street" required placeholder="e.g. 100 Feet Road, Indiranagar" class="clean-input text-xs" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">City & State</label>
+                  <input type="text" id="new-addr-city" required placeholder="Bengaluru, Karnataka" class="clean-input text-xs" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">PIN Code (India)</label>
+                  <input type="text" id="new-addr-pin" required placeholder="560038" class="clean-input text-xs" />
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Address Label</label>
+                  <select id="new-addr-type" class="clean-input text-xs">
+                    <option value="Home / Residence">Home</option>
+                    <option value="Work / Office">Work</option>
+                    <option value="Warehouse / Hub">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary py-2.5 px-5 text-xs font-semibold">Save Delivery Address</button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- CLEAN FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-16 py-10 text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-slate-900 text-base">OmniCart Marketplace</span>
+        <span>•</span>
+        <span>Enterprise E-Commerce Frontend</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-slate-400">
+        <span>MySQL Schema Aligned</span>
+        <span>•</span>
+        <span>Rupees (₹) Base Currency</span>
+        <span>•</span>
+        <a href="seller-dashboard.html" class="text-emerald-700 hover:underline font-semibold">Seller Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="clean-card w-full max-w-md p-6 bg-white shadow-2xl relative">
+      <button onclick="AuthModule.closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 mb-5 text-xs">
+        <button id="modal-tab-buyer" onclick="AuthModule.setModalTab('buyer')" class="py-2.5 rounded-lg font-semibold transition-all bg-white text-blue-700 shadow-xs border border-slate-200">Customer Access</button>
+        <button id="modal-tab-seller" onclick="AuthModule.setModalTab('seller')" class="py-2.5 rounded-lg font-medium transition-all text-slate-600 hover:text-slate-900">Seller Portal</button>
+      </div>
+
+      <div id="auth-modal-form-container"></div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/data-store.js"></script>
+  <script src="js/ui-module.js"></script>
+  <script src="js/auth-module.js"></script>
+  <script src="js/visual-search-module.js"></script>
+  <script src="js/profile-module.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      ProfileModule.init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+com\omnicart\service\OrderServiceTest.class
+com\omnicart\controller\ProductControllerIntegrationTest.class
+com\omnicart\service\PriceServiceTest.class

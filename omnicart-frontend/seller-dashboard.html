@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCart — Merchant Seller Portal</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom Clean Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans text-base">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- MAIN NAVIGATION HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="seller-dashboard.html" class="flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow-xs">
+          🏪
+        </div>
+        <div>
+          <span class="text-2xl font-bold tracking-tight text-slate-900 block leading-tight">OmniCart</span>
+          <span class="text-xs text-emerald-700 font-semibold block">Merchant Seller Portal</span>
+        </div>
+      </a>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3">
+        <button
+          onclick="SellerModule.openAddProductModal()"
+          class="btn-primary bg-emerald-600 hover:bg-emerald-700 py-2 px-4 text-xs font-semibold"
+        >
+          + Add New Product
+        </button>
+        <a href="index.html" class="btn-secondary py-2 px-3.5 text-xs font-semibold">
+          Customer Store ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+
+    <!-- 1. STRICT ACCESS GUARD: MERCHANT LOGIN & REGISTER (Shown when not authenticated) -->
+    <div id="seller-auth-container" class="max-w-md mx-auto my-8 clean-card p-6 sm:p-8 bg-white shadow-xl">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 text-2xl flex items-center justify-center mx-auto mb-3 border border-emerald-200 shadow-xs">
+          🏪
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900">Merchant Center Login</h2>
+        <p class="text-xs text-slate-500 mt-1">Sign in with your merchant credentials or register your store to manage inventory and sales in Rupees (₹).</p>
+      </div>
+
+      <!-- Auth Tabs: Sign In vs Register -->
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 mb-5 text-xs">
+        <button
+          id="seller-tab-login"
+          onclick="SellerModule.setAuthMode('login')"
+          class="py-2 rounded-lg font-semibold transition-all bg-white text-emerald-700 shadow-xs border border-slate-200"
+        >
+          Merchant Sign In
+        </button>
+        <button
+          id="seller-tab-register"
+          onclick="SellerModule.setAuthMode('register')"
+          class="py-2 rounded-lg font-medium transition-all text-slate-500 hover:text-slate-800"
+        >
+          Register Store
+        </button>
+      </div>
+
+      <!-- Form Box (Rendered dynamically via SellerModule) -->
+      <div id="seller-auth-form-box"></div>
+    </div>
+
+    <!-- 2. PROTECTED MERCHANT DASHBOARD (Shown ONLY when authenticated as seller) -->
+    <div id="seller-dashboard-container" class="hidden space-y-8">
+      
+      <!-- Top Seller Info Banner (Seller Table) -->
+      <div class="clean-card p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-4 border-emerald-500">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="badge badge-green text-xs">Verified Merchant</span>
+            <span class="text-xs text-slate-500 font-medium" id="seller-gstin-badge">GSTIN: 29ABCDE1234F1Z5</span>
+          </div>
+          <h1 id="seller-company-title" class="text-2xl sm:text-3xl font-bold text-slate-900">Merchant Store</h1>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 mt-1">
+            <span>Email: <strong id="seller-email-badge" class="text-slate-700">orders@company.in</strong></span>
+            <span>•</span>
+            <span>Phone: <strong id="seller-phone-badge" class="text-slate-700">+91 800 555 0000</strong></span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button onclick="SellerModule.openAddProductModal()" class="btn-primary bg-emerald-600 hover:bg-emerald-700 text-xs py-2 px-4">
+            + Publish Product
+          </button>
+          <button onclick="AuthModule.logout()" class="btn-secondary text-xs py-2 px-3 text-red-600 hover:bg-red-50 hover:border-red-200">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Key Performance Metrics in Rupees -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="clean-card p-6">
+          <div class="text-xs text-slate-500 font-medium mb-1">Total Store Revenue</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="seller-kpi-revenue">₹0</div>
+          <div class="text-xs text-emerald-600 font-medium mt-1">From fulfilled customer orders</div>
+        </div>
+
+        <div class="clean-card p-6">
+          <div class="text-xs text-slate-500 font-medium mb-1">Total Units Sold</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="seller-kpi-units">0 units</div>
+          <div class="text-xs text-slate-400 mt-1">Across customer checkouts</div>
+        </div>
+
+        <div class="clean-card p-6">
+          <div class="text-xs text-slate-500 font-medium mb-1">Active Products</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900" id="seller-kpi-skus">0 items</div>
+          <div class="text-xs text-blue-600 font-medium mt-1">Published in catalog</div>
+        </div>
+
+        <div class="clean-card p-6">
+          <div class="text-xs text-slate-500 font-medium mb-1">Low Stock Alerts</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-red-600" id="seller-kpi-alerts">0 items</div>
+          <div class="text-xs text-red-500 font-medium mt-1">Requires replenishment</div>
+        </div>
+      </div>
+
+      <!-- Main 2 Columns: Product Inventory Table (8 cols) & Sold Orders (4 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- LEFT: Inventory Table (8 cols) -->
+        <div class="lg:col-span-8 clean-card p-6 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Product Inventory & Price Ledgers</h2>
+              <p class="text-xs text-slate-500">Live warehouse stocks and price fluctuations tracked in Rupees.</p>
+            </div>
+            <div class="w-full sm:w-64">
+              <input
+                type="text"
+                id="inventory-filter-input"
+                oninput="SellerModule.renderInventoryTable()"
+                placeholder="Search products, ID or category..."
+                class="clean-input text-xs py-2"
+              />
+            </div>
+          </div>
+
+          <!-- Inventory Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="p-3">Product Name & ID</th>
+                  <th class="p-3">Category</th>
+                  <th class="p-3">Price</th>
+                  <th class="p-3">Stock</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="seller-inventory-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically populated via SellerModule -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RIGHT: Live Sold Orders & Carrier Fulfillment (4 cols) -->
+        <div class="lg:col-span-4 clean-card p-6 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Customer Orders</h2>
+              <p class="text-xs text-slate-500">Live order fulfillment ledger</p>
+            </div>
+            <span class="badge badge-blue text-[10px]">Real-Time</span>
+          </div>
+
+          <div id="seller-orders-container" class="space-y-3">
+            <!-- Dynamically populated via SellerModule -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ADD PRODUCT MODAL -->
+  <div id="add-product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+    <div class="clean-card w-full max-w-lg p-6 bg-white shadow-2xl relative">
+      <button onclick="SellerModule.closeAddProductModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
+      
+      <div class="mb-4">
+        <h3 class="font-bold text-slate-900 text-lg">Publish New Product to Catalog</h3>
+        <p class="text-xs text-slate-500">Enter product specifications and initial price ledger record</p>
+      </div>
+
+      <form onsubmit="SellerModule.handleAddProductSubmit(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Product Title</label>
+          <input type="text" id="new-prod-name" required placeholder="e.g. Wireless Ergonomic Mouse" class="clean-input text-xs" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Category</label>
+            <select id="new-prod-cat" class="clean-input text-xs">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Price in Rupees (₹)</label>
+            <input type="number" id="new-prod-price" required min="1" step="1" placeholder="e.g. 1999" class="clean-input text-xs" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Initial Stock Quantity</label>
+            <input type="number" id="new-prod-stock" required min="1" value="25" class="clean-input text-xs" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Image URL</label>
+            <input type="url" id="new-prod-img" placeholder="https://images.unsplash.com/..." class="clean-input text-xs" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Product Description</label>
+          <textarea id="new-prod-desc" rows="2" placeholder="Key technical specifications, warranty and package contents..." class="clean-input text-xs"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="SellerModule.closeAddProductModal()" class="btn-secondary py-2 text-xs">Cancel</button>
+          <button type="submit" class="btn-primary bg-emerald-600 hover:bg-emerald-700 py-2 text-xs font-semibold">Publish SKU to Catalog</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CLEAN FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-16 py-10 text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-slate-900 text-base">OmniCart Merchant Center</span>
+        <span>•</span>
+        <span>Enterprise E-Commerce Frontend</span>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-slate-400">
+        <span>MySQL Schema Aligned</span>
+        <span>•</span>
+        <span>Rupees (₹) Base Currency</span>
+        <span>•</span>
+        <a href="index.html" class="text-blue-600 hover:underline font-semibold">Customer Storefront</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/data-store.js"></script>
+  <script src="js/ui-module.js"></script>
+  <script src="js/auth-module.js"></script>
+  <script src="js/seller-module.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      SellerModule.init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniCart — Checkout</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom Clean Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans text-base">
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- MAIN NAVIGATION HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-sm">
+          🛒
+        </div>
+        <div>
+          <span class="text-2xl font-bold tracking-tight text-slate-900 block leading-tight">OmniCart</span>
+          <span class="text-xs text-slate-500 font-medium block">Secure Checkout</span>
+        </div>
+      </a>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Saved Products Link (Guarded) -->
+        <a
+          href="saved-products.html"
+          onclick="return AuthModule.guardUserClick('saved-products.html', event)"
+          class="flex items-center gap-1.5 p-2 rounded-lg text-slate-700 hover:bg-slate-100 text-xs font-semibold"
+        >
+          <span>❤️</span>
+          <span class="hidden sm:inline">Saved</span>
+          <span id="header-saved-badge" class="badge badge-blue text-[11px] saved-count-badge">0</span>
+        </a>
+
+        <!-- Guest Auth Pill -->
+        <div id="header-guest-auth" class="flex items-center gap-2">
+          <a href="login.html?redirect=checkout.html" class="btn-primary py-2 px-4 text-xs font-semibold">
+            Sign In
+          </a>
+        </div>
+
+        <!-- Authenticated Dropdown -->
+        <div id="header-user-auth" class="relative hidden">
+          <button onclick="AuthModule.toggleAuthDropdown()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm font-semibold text-slate-800 transition-colors">
+            <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
+            <span id="header-user-name">My Account</span>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="auth-dropdown-menu" class="hidden absolute right-0 mt-2 w-64 rounded-xl bg-white border border-slate-200 shadow-xl p-2 z-50 text-sm">
+            <div id="auth-dropdown-items"></div>
+          </div>
+        </div>
+
+        <a href="cart.html" class="btn-secondary py-2 px-3.5 text-xs font-semibold">
+          ← Back to Cart
+        </a>
+      </div>
+    </div>
+
+    <!-- Secondary Navigation Bar -->
+    <div class="border-t border-slate-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-sm py-2 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-1.5">
+          <a href="index.html" class="nav-tab">Home</a>
+          <a href="products.html" class="nav-tab">All Products</a>
+          <a href="saved-products.html" onclick="return AuthModule.guardUserClick('saved-products.html', event)" class="nav-tab">Saved Products (Wishlist)</a>
+          <a href="cart.html" onclick="return AuthModule.guardUserClick('cart.html', event)" class="nav-tab">My Cart</a>
+          <a href="orders.html" onclick="return AuthModule.guardUserClick('orders.html', event)" class="nav-tab">Track Orders</a>
+          <a href="customer-profile.html" onclick="return AuthModule.guardUserClick('customer-profile.html', event)" class="nav-tab">My Profile</a>
+        </div>
+        <a href="seller-dashboard.html" onclick="return AuthModule.guardSellerClick('seller-dashboard.html', event)" class="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3.5 py-1.5 rounded-lg transition-colors shrink-0">
+          Seller Portal ↗
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CHECKOUT CONTAINER (2 Columns) -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    
+    <div class="max-w-2xl mb-8">
+      <h1 class="text-3xl font-extrabold text-slate-900">Checkout & Order Placement</h1>
+      <p class="text-sm text-slate-500 mt-1">Please select your delivery address and preferred payment method in Rupees (₹).</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- LEFT: Checkout Form Steps (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- STEP 1: Customer Contact Information -->
+        <div class="clean-card p-6">
+          <div class="flex items-center gap-3 pb-3 mb-4 border-b border-slate-100">
+            <span class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Customer Details</h2>
+          </div>
+
+          <div id="checkout-customer-box" class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <!-- Dynamically populated via CheckoutModule -->
+          </div>
+        </div>
+
+        <!-- STEP 2: Shipping Address Selection -->
+        <div class="clean-card p-6">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Shipping Address</h2>
+            </div>
+            <a href="customer-profile.html" class="text-xs text-blue-600 font-semibold hover:underline">
+              + Manage Addresses
+            </a>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="checkout-addresses-list">
+            <!-- Dynamically populated via CheckoutModule -->
+          </div>
+        </div>
+
+        <!-- STEP 3: Payment Method Selection -->
+        <div class="clean-card p-6">
+          <div class="flex items-center gap-3 pb-3 mb-4 border-b border-slate-100">
+            <span class="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">3</span>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Payment Method</h2>
+          </div>
+
+          <div class="space-y-3 text-sm">
+            <label class="p-4 rounded-xl border border-blue-500 bg-blue-50/40 flex items-center gap-3 cursor-pointer transition-colors">
+              <input type="radio" name="payment-method" checked onchange="CheckoutModule.selectPaymentMethod('UPI Instant Transfer (Google Pay / PhonePe / Paytm)')" class="text-blue-600 w-5 h-5" />
+              <div>
+                <strong class="text-slate-900 text-base block">UPI Instant Transfer (Recommended)</strong>
+                <span class="text-xs text-slate-500">Google Pay, PhonePe, Paytm (Zero Transaction Fee)</span>
+              </div>
+            </label>
+
+            <label class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center gap-3 cursor-pointer transition-colors">
+              <input type="radio" name="payment-method" onchange="CheckoutModule.selectPaymentMethod('Credit / Debit Card')" class="text-blue-600 w-5 h-5" />
+              <div>
+                <strong class="text-slate-900 text-base block">Credit / Debit Card</strong>
+                <span class="text-xs text-slate-500">Visa, Mastercard, RuPay Cards</span>
+              </div>
+            </label>
+
+            <label class="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center gap-3 cursor-pointer transition-colors">
+              <input type="radio" name="payment-method" onchange="CheckoutModule.selectPaymentMethod('Cash on Delivery')" class="text-blue-600 w-5 h-5" />
+              <div>
+                <strong class="text-slate-900 text-base block">Cash on Delivery</strong>
+                <span class="text-xs text-slate-500">Pay cash upon verified doorstep delivery</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Order Summary Card (5 cols) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <div class="clean-card p-6 sm:p-7 space-y-4">
+          <h2 class="text-lg font-bold text-slate-900 pb-3 border-b border-slate-100">Order Summary</h2>
+
+          <!-- Mini Cart List -->
+          <div id="checkout-mini-items" class="space-y-2">
+            <!-- Dynamically populated via CheckoutModule -->
+          </div>
+
+          <!-- Totals in Rupees -->
+          <div class="space-y-2.5 text-sm pt-3 border-t border-slate-100">
+            <div class="flex justify-between text-slate-600">
+              <span>Items Total:</span>
+              <strong id="summary-subtotal" class="text-slate-900 text-base">₹0</strong>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Delivery Fee:</span>
+              <strong class="text-emerald-600 font-semibold">FREE</strong>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Discount Voucher:</span>
+              <strong id="summary-discount" class="text-emerald-700">-₹0</strong>
+            </div>
+            <div class="pt-3 border-t border-slate-200 flex justify-between text-slate-900 font-bold text-lg">
+              <span>Total to Pay:</span>
+              <strong id="summary-total" class="text-blue-600 font-extrabold text-2xl">₹0</strong>
+            </div>
+          </div>
+
+          <!-- Place Order Button -->
+          <button
+            id="checkout-action-btn"
+            onclick="CheckoutModule.placeOrder(event)"
+            class="btn-primary w-full py-4 text-sm justify-center font-bold shadow-md"
+          >
+            Confirm & Place Order (₹) →
+          </button>
+
+          <p class="text-xs text-center text-slate-400">
+            By placing order you agree to OmniCart terms and 20-min fulfillment policy.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- CLEAN FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-16 py-10 text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-bold text-slate-900 text-base">OmniCart Marketplace</span>
+        <span>•</span>
+        <span>DBMS Project (Group 21)</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="index.html" class="hover:underline">Home</a>
+        <a href="products.html" class="hover:underline">Products</a>
+        <a href="saved-products.html" class="hover:underline">Saved Products</a>
+        <a href="cart.html" class="hover:underline">Cart</a>
+        <a href="orders.html" class="hover:underline">My Orders</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CLEAN LOGIN / REGISTER MODAL -->
+  <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs hidden">
+    <div class="relative w-full max-w-md bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-2xl">
+      <button onclick="AuthModule.closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-xl font-bold">✕</button>
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 mb-5 text-xs">
+        <button id="modal-tab-buyer" onclick="AuthModule.setModalTab('buyer')" class="py-2.5 rounded-lg font-semibold transition-all bg-white text-blue-700 shadow-xs border border-slate-200">Customer Access</button>
+        <button id="modal-tab-seller" onclick="AuthModule.setModalTab('seller')" class="py-2.5 rounded-lg font-medium transition-all text-slate-600 hover:text-slate-900">Seller Portal</button>
+      </div>
+
+      <div id="auth-modal-form-container"></div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT MODULES -->
+  <script src="js/data-store.js"></script>
+  <script src="js/ui-module.js"></script>
+  <script src="js/auth-module.js"></script>
+  <script src="js/checkout-module.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      CheckoutModule.init();
+    });
+  </script>
+</body>
+</html>
