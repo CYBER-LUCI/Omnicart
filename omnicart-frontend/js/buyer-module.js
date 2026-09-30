@@ -143,8 +143,7 @@ const BuyerModule = {
     if (recommended.length === 0) {
       container.innerHTML = `
         <div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-200">
-          <p class="text-xs">No products listed yet. Products added by registered sellers will appear here.</p>
-          <a href="seller-dashboard.html" class="inline-block mt-2 text-xs text-blue-600 hover:underline font-semibold">List a product in Seller Center →</a>
+          <p class="text-xs">No products listed yet. Products will appear here shortly.</p>
         </div>
       `;
       return;

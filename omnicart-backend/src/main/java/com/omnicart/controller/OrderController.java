@@ -42,11 +42,27 @@ public class OrderController {
     }
 
     @GetMapping
-    @Operation(summary = "List all orders (paginated)")
+    @Operation(summary = "List all orders with optional seller filter (paginated)")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAllOrders(
+            @RequestParam(required = false) Long sellerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<OrderResponse> orders = orderService.getAllOrders(PageRequest.of(page, size));
+        Page<OrderResponse> orders;
+        if (sellerId != null) {
+            orders = orderService.getSellerOrders(sellerId, PageRequest.of(page, size));
+        } else {
+            orders = orderService.getAllOrders(PageRequest.of(page, size));
+        }
+        return ResponseEntity.ok(ApiResponse.success(new PageResponse<>(orders)));
+    }
+
+    @GetMapping("/seller/{sellerId}")
+    @Operation(summary = "Get orders containing products from a specific seller")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getSellerOrders(
+            @PathVariable Long sellerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<OrderResponse> orders = orderService.getSellerOrders(sellerId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(new PageResponse<>(orders)));
     }
 

@@ -30,6 +30,9 @@ public class OrderMapper {
                 if (od.getProduct() != null) {
                     odRes.setProductId(od.getProduct().getId());
                     odRes.setProductName(od.getProduct().getName());
+                    if (od.getProduct().getImages() != null && !od.getProduct().getImages().isEmpty()) {
+                        odRes.setImageUrl(od.getProduct().getImages().get(0).getImageUrl());
+                    }
                 }
                 odRes.setQuantity(od.getQuantity());
                 odRes.setExactLedgerPrice(od.getExactLedgerPrice());

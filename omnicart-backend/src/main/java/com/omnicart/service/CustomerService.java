@@ -16,8 +16,10 @@ public interface CustomerService {
     void deleteCustomer(Long id);
     Page<CustomerResponse> getAllCustomers(Pageable pageable);
     CustomerResponse addEmail(Long customerId, EmailRequest request);
+    java.util.List<com.omnicart.dto.response.CustomerEmailResponse> getCustomerEmails(Long customerId);
     void removeEmail(Long customerId, Long emailId);
     CustomerResponse addPhone(Long customerId, PhoneRequest request);
+    java.util.List<com.omnicart.dto.response.CustomerPhoneResponse> getCustomerPhones(Long customerId);
     void removePhone(Long customerId, Long phoneId);
     CustomerDashboardResponse getCustomerDashboard(Long customerId);
 }

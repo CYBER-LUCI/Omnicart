@@ -66,9 +66,10 @@ const UIModule = {
 
   // Header State Renderer (Badges, Login/Logout Dropdown)
   renderHeader() {
-    // Badges
-    const cartCount = DataStore.getCartCount();
-    const savedCount = DataStore.getSavedProducts().length;
+    // Badges: When no user is logged in, cart count and saved count must be 0
+    const isBuyer = DataStore.currentUser && DataStore.currentUserRole === 'buyer';
+    const cartCount = isBuyer ? DataStore.getCartCount() : 0;
+    const savedCount = isBuyer ? DataStore.getSavedProducts().length : 0;
 
     const cartBadge = document.getElementById('header-cart-badge');
     if (cartBadge) {
@@ -153,6 +154,19 @@ const UIModule = {
     } else {
       if (guestAuth) guestAuth.classList.remove('hidden');
       if (userAuth) userAuth.classList.add('hidden');
+    }
+
+    // Hero banner auth button (on index.html): hide when any user is logged in
+    const heroAuthBtn = document.getElementById('hero-auth-btn');
+    if (heroAuthBtn) {
+      const isLoggedIn = !!((DataStore.currentUser && DataStore.currentUserRole === 'buyer') || (DataStore.currentSeller && DataStore.currentUserRole === 'seller'));
+      if (isLoggedIn) {
+        heroAuthBtn.classList.add('hidden');
+        heroAuthBtn.style.display = 'none';
+      } else {
+        heroAuthBtn.classList.remove('hidden');
+        heroAuthBtn.style.display = '';
+      }
     }
   },
 

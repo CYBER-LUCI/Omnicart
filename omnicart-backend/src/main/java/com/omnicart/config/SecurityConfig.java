@@ -48,9 +48,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/marketplace/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sellers/**").permitAll()
                         .requestMatchers("/api/search/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-                        // Allow all during DBMS development/testing while keeping security structures ready
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

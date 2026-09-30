@@ -168,8 +168,9 @@ const CatalogModule = {
               <!-- Wishlist Floating Button -->
               <button
                 type="button"
-                onclick="DataStore.toggleSavedProduct(${p.id}); CatalogModule.renderProductsGrid(); UIModule.showToast('${isSaved ? 'Removed from wishlist' : 'Added to wishlist'}', 'info');"
+                onclick="CatalogModule.handleToggleWishlist(${p.id}, event)"
                 class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 backdrop-blur-xs border border-slate-200 hover:bg-white flex items-center justify-center text-xs shadow-xs transition-transform hover:scale-110 cursor-pointer"
+                title="${isSaved ? 'Remove from wishlist' : 'Save to wishlist'}"
               >
                 ${isSaved ? '❤️' : '🤍'}
               </button>
@@ -221,6 +222,20 @@ const CatalogModule = {
         </div>
       `;
     }).join('');
+  },
+
+  handleToggleWishlist(productId, event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    try {
+      const added = DataStore.toggleSavedProduct(productId);
+      this.renderProductsGrid();
+      UIModule.showToast(added ? 'Saved to wishlist!' : 'Removed from wishlist', 'info');
+    } catch (e) {
+      // DataStore triggers redirect to login with reason=wishlist
+    }
   }
 };
 

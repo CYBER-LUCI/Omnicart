@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>OmniCart — Sign In or Register</title>
 
   <!-- Tailwind CSS CDN -->
@@ -165,8 +168,13 @@
         const text = document.getElementById('redirect-context-text');
         if (!banner || !text) return;
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const reason = urlParams.get('reason');
+
         let msg = 'Please sign in to access your account.';
-        if (redirect.includes('cart.html')) {
+        if (reason === 'cart') {
+          msg = '🛒 Customer sign-in required: Please log in to add items to your cart and make purchases.';
+        } else if (redirect.includes('cart.html')) {
           msg = 'Please sign in to view and manage your shopping cart.';
         } else if (redirect.includes('orders.html')) {
           msg = 'Please sign in to view your orders and track live deliveries.';
@@ -455,6 +463,13 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       LoginPage.init();
+    });
+
+    window.addEventListener('pageshow', (event) => {
+      // Clear inputs if restored from bfcache
+      LoginPage.clearInputs();
+      setTimeout(() => LoginPage.clearInputs(), 50);
+      setTimeout(() => LoginPage.clearInputs(), 200);
     });
   </script>
 </body>

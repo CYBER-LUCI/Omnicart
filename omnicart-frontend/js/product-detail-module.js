@@ -29,7 +29,6 @@ const ProductDetailModule = {
             <p class="text-sm text-slate-500 mt-2">No product is currently selected or the product is no longer available in the catalog.</p>
             <div class="mt-6 flex items-center justify-center gap-4">
               <a href="products.html" class="btn-primary py-2.5 px-6 text-sm">Browse Products →</a>
-              <a href="seller-dashboard.html" class="btn-secondary py-2.5 px-6 text-sm">Seller Center</a>
             </div>
           </div>
         `;
@@ -109,9 +108,13 @@ const ProductDetailModule = {
 
   toggleSaved() {
     if (!this.product) return;
-    const added = DataStore.toggleSavedProduct(this.product.id);
-    this.updateWishlistButton();
-    UIModule.showToast(added ? 'Saved to your Wishlist!' : 'Removed from Wishlist', 'info');
+    try {
+      const added = DataStore.toggleSavedProduct(this.product.id);
+      this.updateWishlistButton();
+      UIModule.showToast(added ? 'Saved to your Wishlist!' : 'Removed from Wishlist', 'info');
+    } catch (e) {
+      // DataStore handles redirect and toast
+    }
   },
 
   updateWishlistButton() {

@@ -149,21 +149,8 @@ const OrdersModule = {
                   Cancel Order
                 </button>
               ` : ''}
-              <button
-                onclick="UIModule.showToast('Official GST tax invoice generated for #${safeOrderNum}', 'success')"
-                class="btn-secondary text-xs py-1.5 px-3"
-              >
-                Download Invoice (PDF)
-              </button>
-            </div>
-          </div>
-
-        </div>
-      `;
-    }).join('');
-  },
-
-  async cancelOrder(orderId) {
+"              <button\n                onclick=\"OrdersModule.downloadInvoice(${order.id})\"\n                class=\"btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 hover:bg-slate-100\"\n              >\n                <span>📄</span>\n                <span>Download Invoice (PDF)</span>\n              </button>\n            </div>\n          </div>\n\n        </div>\n      `;\n    }).join('');\n  },\n\n  numberToWordsINR(amount) {\n    const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];\n    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];\n    function convertLessThanOneThousand(n) {\n      if (n === 0) return '';\n      let s = '';\n      if (n >= 100) {\n        s += units[Math.floor(n / 100)] + ' Hundred ';\n        n %= 100;\n      }\n      if (n >= 20) {\n        s += tens[Math.floor(n / 10)] + ' ';\n        n %= 10;\n      }\n      if (n > 0) {\n        s += units[n] + ' ';\n      }\n      return s;\n    }\n    const num = Math.floor(amount);\n    if (num === 0) return 'Rupees Zero Only';\n    let res = '';\n    const crore = Math.floor(num / 10000000);\n    const lakh = Math.floor((num % 10000000) / 100000);\n    const thousand = Math.floor((num % 100000) / 1000);\n    const remainder = num % 1000;\n    if (crore > 0) res += convertLessThanOneThousand(crore) + 'Crore ';\n    if (lakh > 0) res += convertLessThanOneThousand(lakh) + 'Lakh ';\n    if (thousand > 0) res += convertLessThanOneThousand(thousand) + 'Thousand ';\n    if (remainder > 0) res += convertLessThanOneThousand(remainder);\n    return 'Rupees ' + res.trim() + ' Only';\n  },\n\n  async downloadInvoice(orderId) {\n    let order = (DataStore.orders || []).find(o => Number(o.id) === Number(orderId));\n    if (!order) {\n      try {\n        const res = await DataStore.apiRequest(`/orders/${orderId}`);\n        if (res && res.succ
+<truncated 14131 bytes>
     if (!confirm('Are you sure you want to cancel this order? Stock will be immediately restored.')) {
       return;
     }

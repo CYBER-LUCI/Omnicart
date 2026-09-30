@@ -1,14 +1,18 @@
 package com.omnicart.entity;
 
+import org.springframework.data.domain.Persistable;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "OrderDetails")
-public class OrderDetails {
+public class OrderDetails implements Persistable<OrderDetailsId> {
 
     @EmbeddedId
     private OrderDetailsId id = new OrderDetailsId();
+
+    @Transient
+    private boolean isNew = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("orderId")
@@ -72,5 +76,16 @@ public class OrderDetails {
     public BigDecimal getLineTotal() {
         if (exactLedgerPrice == null || quantity == null) return BigDecimal.ZERO;
         return exactLedgerPrice.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostPersist
+    @PostLoad
+    public void markNotNew() {
+        this.isNew = false;
     }
 }

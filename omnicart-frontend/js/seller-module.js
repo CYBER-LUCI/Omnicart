@@ -368,10 +368,11 @@ const SellerModule = {
     }
   },
 
-  updateOrderStatus(orderId, newStatus) {
+  async updateOrderStatus(orderId, newStatus) {
     try {
-      DataStore.updateOrderStatus(orderId, newStatus);
+      await DataStore.updateOrderStatus(orderId, newStatus);
       UIModule.showToast(`Order #${orderId} status updated to ${newStatus}`, 'success');
+      await this.fetchSellerOrders();
       this.render();
     } catch (err) {
       UIModule.showToast(err.message || 'Failed to update order status.', 'error');

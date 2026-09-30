@@ -94,6 +94,20 @@ const DataStore = {
     this.categories = JSON.parse(localStorage.getItem('omnicart_categories') || '[]');
     this.products = JSON.parse(localStorage.getItem('omnicart_products') || '[]');
     this.addresses = JSON.parse(localStorage.getItem('omnicart_addresses') || '[]');
+    if (this.addresses.length === 0) {
+      this.addresses = [
+        {
+          id: 1,
+          type: 'Home',
+          street: 'Flat 402, Cyber Residency, 100 Feet Rd, Indiranagar',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          pincode: '560038',
+          isDefault: true
+        }
+      ];
+      localStorage.setItem('omnicart_addresses', JSON.stringify(this.addresses));
+    }
     this.phones = JSON.parse(localStorage.getItem('omnicart_phones') || '[]');
     this.emails = JSON.parse(localStorage.getItem('omnicart_emails') || '[]');
     this.orders = JSON.parse(localStorage.getItem('omnicart_orders') || '[]');
@@ -463,6 +477,20 @@ const DataStore = {
       throw new Error('Invalid product.');
     }
 
+    // STRICT CUSTOMER AUTHENTICATION GATE
+    // Add to cart should work ONLY when customer is logged in
+    if (!this.currentUser || this.currentUserRole !== 'buyer') {
+      const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+      const redirectUrl = encodeURIComponent(currentFile + window.location.search);
+      if (window.UIModule && typeof window.UIModule.showToast === 'function') {
+        window.UIModule.showToast('Please sign in to add items to your cart. Redirecting...', 'warning', 3000);
+      }
+      setTimeout(() => {
+        window.location.href = `login.html?role=buyer&redirect=${redirectUrl}&auth_required=true&reason=cart`;
+      }, 400);
+      throw new Error('Please sign in to your buyer account to add items to your cart.');
+    }
+
     const prodId = Number(product.id);
     const qtyToAdd = Math.max(1, Math.floor(Number(quantity) || 1));
 
@@ -788,6 +816,24 @@ const DataStore = {
       } catch (err) {
         console.warn('[DataStore] Image save notice:', err.message);
       }
+    }
+
+    // Automatically index newly published product into Visual Search AI engine (port 5000)
+    if (productData.imageUrl) {
+      try {
+        await fetch('http://127.0.0.1:5000/api/embeddings/index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: String(prodId),
+            name: productData.name,
+            category: productData.categoryName || 'General',
+            price: initialPrice,
+            image: productData.imageUrl,
+            desc: productData.description || ''
+          })
+        }).catch(err => console.warn('[DataStore] Visual Search auto-index notice:', err));
+      } catch (_) {}
     }
 
     const newProd = {

@@ -8,6 +8,8 @@ import com.omnicart.dto.response.AddressResponse;
 import com.omnicart.dto.response.CustomerDashboardResponse;
 import com.omnicart.dto.response.CustomerResponse;
 import com.omnicart.dto.response.OrderResponse;
+import com.omnicart.dto.response.CustomerEmailResponse;
+import com.omnicart.dto.response.CustomerPhoneResponse;
 import com.omnicart.entity.Customer;
 import com.omnicart.entity.CustomerEmail;
 import com.omnicart.entity.CustomerPhone;
@@ -140,6 +142,18 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CustomerEmailResponse> getCustomerEmails(Long customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new CustomerNotFoundException(customerId);
+        }
+        return customerEmailRepository.findByCustomerId(customerId).stream()
+                .map(e -> new CustomerEmailResponse(
+                        e.getId(), customerId, e.getEmailAddress(), e.getIsPrimary(), e.getCreatedAt()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void removeEmail(Long customerId, Long emailId) {
         CustomerEmail email = customerEmailRepository.findById(emailId)
@@ -161,6 +175,18 @@ public class CustomerServiceImpl implements CustomerService {
         customerPhoneRepository.save(phone);
         customer.addPhone(phone);
         return CustomerMapper.toResponse(customer);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerPhoneResponse> getCustomerPhones(Long customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new CustomerNotFoundException(customerId);
+        }
+        return customerPhoneRepository.findByCustomerId(customerId).stream()
+                .map(p -> new CustomerPhoneResponse(
+                        p.getId(), customerId, p.getPhoneNumber(), p.getIsPrimary(), p.getCreatedAt()))
+                .collect(Collectors.toList());
     }
 
     @Override

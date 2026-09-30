@@ -13,6 +13,7 @@ public interface OrderService {
     OrderResponse getOrderById(Long orderId);
     Page<OrderResponse> getAllOrders(Pageable pageable);
     Page<OrderResponse> getCustomerOrders(Long customerId, Pageable pageable);
+    Page<OrderResponse> getSellerOrders(Long sellerId, Pageable pageable);
     OrderResponse updateShippingStatus(Long orderId, ShippingStatusUpdateRequest request);
     OrderResponse cancelOrder(Long orderId);
     BigDecimal calculateOrderTotal(Long orderId);

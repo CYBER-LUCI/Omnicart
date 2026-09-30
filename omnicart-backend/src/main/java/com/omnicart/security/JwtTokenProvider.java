@@ -46,6 +46,36 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    public Long getUserIdFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            Object userIdObj = claims.get("userId");
+            if (userIdObj instanceof Number) {
+                return ((Number) userIdObj).longValue();
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    public Role getRoleFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            String roleStr = (String) claims.get("role");
+            if (roleStr != null) {
+                return Role.valueOf(roleStr);
+            }
+        } catch (Exception ignored) {}
+        return Role.CUSTOMER;
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);

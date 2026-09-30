@@ -175,6 +175,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getSellerOrders(Long sellerId, Pageable pageable) {
+        return orderRepository.findOrdersContainingSellerProducts(sellerId, pageable)
+                .map(OrderMapper::toResponse);
+    }
+
+    @Override
     @Transactional
     public OrderResponse updateShippingStatus(Long orderId, ShippingStatusUpdateRequest request) {
         Order order = orderRepository.findById(orderId)

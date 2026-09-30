@@ -9,6 +9,7 @@ public class OrderDetailResponse {
     private BigDecimal exactLedgerPrice;
     private Long ledgerId;
     private BigDecimal lineTotal;
+    private String imageUrl;
 
     public OrderDetailResponse() {}
 
@@ -29,4 +30,7 @@ public class OrderDetailResponse {
 
     public BigDecimal getLineTotal() { return lineTotal; }
     public void setLineTotal(BigDecimal lineTotal) { this.lineTotal = lineTotal; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

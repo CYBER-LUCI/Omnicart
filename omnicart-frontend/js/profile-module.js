@@ -15,7 +15,7 @@ const ProfileModule = {
     this.renderAuthForm();
   },
 
-  render() {
+  async render() {
     const authContainer = document.getElementById('customer-auth-container');
     const profileContainer = document.getElementById('customer-profile-container');
 
@@ -35,12 +35,25 @@ const ProfileModule = {
     const nameElem = document.getElementById('profile-full-name');
     const idElem = document.getElementById('profile-customer-id');
 
-    if (nameElem) nameElem.innerText = `${user.FirstName} ${user.LastName || ''}`.trim();
+    if (nameElem) nameElem.innerText = `${user.FirstName || ''} ${user.LastName || ''}`.trim() || user.email || 'Customer';
     if (idElem) idElem.innerText = `CUST-00${user.id || '101'}`;
 
+    // Load initial cached values immediately for fast UI paint
     this.renderPhones();
     this.renderEmails();
     this.renderAddresses();
+
+    // Fetch fresh live values directly from OmniCart MySQL database
+    try {
+      await Promise.all([
+        DataStore.fetchCustomerPhones(),
+        DataStore.fetchCustomerEmails(),
+        DataStore.fetchCustomerAddresses()
+      ]);
+      this.renderPhones();
+      this.renderEmails();
+      this.renderAddresses();
+    } catch (_) {}
   },
 
   renderAuthForm() {

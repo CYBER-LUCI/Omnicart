@@ -46,9 +46,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(UnauthorizedOperationException.class)
-    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedOperationException ex, HttpServletRequest request) {
-        log.warn("Unauthorized operation: {}", ex.getMessage());
+    @ExceptionHandler({UnauthorizedOperationException.class, org.springframework.security.access.AccessDeniedException.class})
+    public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex, HttpServletRequest request) {
+        log.warn("Unauthorized / Access denied: {}", ex.getMessage());
         ErrorResponse error = new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
@@ -77,7 +77,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex, HttpServletRequest request) {
         log.error("Internal system error on {}: ", request.getRequestURI(), ex);
-        ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected server error occurred.", request.getRequestURI());
+        String message = ex.getClass().getSimpleName() + ": " + ex.getMessage();
+        if (ex.getCause() != null) {
+            message += " -> " + ex.getCause().getClass().getSimpleName() + ": " + ex.getCause().getMessage();
+            if (ex.getCause().getCause() != null) {
+                message += " -> " + ex.getCause().getCause().getClass().getSimpleName() + ": " + ex.getCause().getCause().getMessage();
+            }
+        }
+        ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), message, request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

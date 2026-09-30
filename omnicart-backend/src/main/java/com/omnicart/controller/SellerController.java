@@ -21,9 +21,11 @@ import java.util.List;
 public class SellerController {
 
     private final SellerService sellerService;
+    private final com.omnicart.service.OrderService orderService;
 
-    public SellerController(SellerService sellerService) {
+    public SellerController(SellerService sellerService, com.omnicart.service.OrderService orderService) {
         this.sellerService = sellerService;
+        this.orderService = orderService;
     }
 
     @PostMapping
@@ -76,5 +78,15 @@ public class SellerController {
     @Operation(summary = "Get seller dashboard metrics (revenue, orders, low stock)")
     public ResponseEntity<ApiResponse<SellerDashboardResponse>> getSellerDashboard(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(sellerService.getSellerDashboard(id)));
+    }
+
+    @GetMapping("/{id}/orders")
+    @Operation(summary = "Get all customer orders containing products sold by this seller")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getSellerOrders(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<OrderResponse> orders = orderService.getSellerOrders(id, PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.success(new PageResponse<>(orders)));
     }
 }
